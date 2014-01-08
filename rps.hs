@@ -32,14 +32,11 @@ playR = do
     if isGameOver s then endGame s else playR 
 
 endGame :: Score -> StateT Score IO () 
-endGame (3,_) = io $ putStrLn "You Win!"
-endGame (_,3) = io $ putStrLn "Sorry You Lost"
+endGame (3,_) = liftIO $ putStrLn "You Win!"
+endGame (_,3) = liftIO $ putStrLn "Sorry You Lost"
 
 isGameOver :: Score -> Bool
 isGameOver (x,y) = x == 3 || y == 3
-
-io :: IO a -> StateT Score IO a
-io = liftIO
 
 genHand :: IO Hand
 genHand = fmap rps rand
