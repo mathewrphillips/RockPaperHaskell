@@ -1,7 +1,7 @@
 import System.Random
+import Control.Monad.State
 
 data Hand = Rock | Scissors | Paper  deriving(Show,Eq)
-data Result = Win | Lose | Tie deriving(Show)
 
 fight :: Hand -> Hand -> Result
 fight h1 h2 | h1 == h2 = Tie
@@ -9,6 +9,41 @@ fight h1 h2 | h1 == h2 = Tie
             | h1 == Paper && h2 == Rock = Win
             | h1 == Scissors && h2 == Paper = Win
             | otherwise = Lose
+
+type Score = (Int,Int)
+data Result = Win | Lose | Tie deriving(Show)
+
+updateScore :: Result -> StateT Score IO Result 
+updateScore r = do
+    (h,c) <- get
+    case r of
+        Win -> put (h+1,c)
+        Lose -> put (h,c+1)
+        Tie -> put (h,c)
+    return r
+
+playR :: StateT Score IO ()
+playR = do
+    io $ putStrLn "(r)ock, (p)aper, or (s)cissors"
+    r <- io $ liftM2 fight getrps genrps
+    io $ print r
+    updateScore r
+    s <- get
+    io $ putStrLn ((show . fst) s ++ " - " ++ (show . snd )s)
+    case isGameOver s of
+        True -> endGame s
+        False -> playR
+
+endGame :: Score -> StateT Score IO () 
+endGame (3,_) = io $ putStrLn "You Win!"
+endGame (_,3) = io $ putStrLn "Sorry You Lost"
+
+isGameOver :: Score -> Bool
+isGameOver (x,y) | x == 3 || y == 3 = True
+                 | otherwise = False
+
+io :: IO a -> StateT Score IO a
+io = liftIO
 
 genrps :: IO Hand
 genrps = fmap rps rand
@@ -23,13 +58,5 @@ getrps = fmap rps getLine
           rps "s" = Scissors
           rps _ = error "invalid choice"
 
-play = do
-    putStrLn "(r)ock, (p)aper, or (s)cissors"
-    human <- getrps
-    computer <- genrps
-    putStrLn (show human ++ " vs. " ++ show computer)
-    let result = fight human computer
-    case result of
-        Win ->  putStrLn "You Win!" 
-        Lose -> putStrLn "You Lose!"
-        Tie -> putStrLn "You Tied!"
+main = runStateT playR (0,0) >> return () 
+    
