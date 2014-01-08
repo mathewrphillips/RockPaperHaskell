@@ -30,9 +30,7 @@ playR = do
     updateScore r
     s <- get
     io $ putStrLn ((show . fst) s ++ " - " ++ (show . snd )s)
-    case isGameOver s of
-        True -> endGame s
-        False -> playR
+    if isGameOver s then endGame s else playR 
 
 endGame :: Score -> StateT Score IO () 
 endGame (3,_) = io $ putStrLn "You Win!"
@@ -58,5 +56,5 @@ getrps = fmap rps getLine
           rps "s" = Scissors
           rps _ = error "invalid choice"
 
-main = runStateT playR (0,0) >> return () 
+main = void $ runStateT playR (0,0)
     
