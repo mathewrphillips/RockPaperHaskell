@@ -21,15 +21,15 @@ updateScore r = do
         Tie -> put (h,c)
     return r
 
-playR :: StateT Score IO ()
-playR = do
+play :: StateT Score IO ()
+play = do
     liftIO $ putStrLn "(r)ock, (p)aper, or (s)cissors"
     r <- liftIO $ liftM2 fight getHand genHand
     liftIO $ print r
     updateScore r
     s <- get
     liftIO $ putStrLn ((show . fst) s ++ " - " ++ (show . snd )s)
-    if isGameOver s then endGame s else playR 
+    if isGameOver s then endGame s else play
 
 endGame :: Score -> StateT Score IO () 
 endGame (3,_) = liftIO $ putStrLn "You Win!"
@@ -53,5 +53,5 @@ getHand = fmap rps getLine
           rps _ = error "invalid choice"
 
 main :: IO ()
-main = void $ runStateT playR (0,0)
+main = void $ runStateT play (0,0)
     
